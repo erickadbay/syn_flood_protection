@@ -7,6 +7,9 @@ class ODLFlowService:
     ODL_USERNAME = 'admin'
     ODL_PASSWORD = 'admin'
 
+    TCP_FLAGS = '0x02'
+    FLOW_TIMEOUT = 12
+
     @classmethod
     def create_block_flow(cls, odl_ip, flow_id, ip_to_block):
         url = f'http://{odl_ip}:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/{flow_id}'
@@ -26,28 +29,33 @@ class ODLFlowService:
         body = {
             'flow': {
                 '@attrs': {'xmlns': 'urn:opendaylight:flow:inventory'},
-                'priority': "2",
+                'id': f'{flow_id}',
+                'table_id': '0',
                 'flow-name': cls.DEFAULT_FLOW_NAME,
                 'match': {
                     'ethernet-match':{
                         'ethernet-type': {
-                            'type': f'{2048}'
+                            'type': '2048'
                         }
                     },
-                    'ipv4-destination': f'{ip_to_block}'
+                    'ipv4-source': ip_to_block,
+                    'tcp-flags-match': {
+                        'tcp-flags': cls.TCP_FLAGS
+                    }
                 },
-                'id': f'{flow_id}',
-                'table_id': f'{0}',
                 'instructions': {
                     'instruction': {
-                        'order': f'{0}',
+                        'order': '0',
                         'apply-actions': {
                             'action': {
-                                'order': f'{0}',
+                                'order': '0',
+                                'drop-action': {}
                             }
                         }
                     }
                 }
+                'priority': '2',
+                'hard-timeout': cls.FLOW_TIMEOUT,
             }
         }
 
