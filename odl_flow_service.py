@@ -1,8 +1,9 @@
 from requests import put
 from xmler import dict2xml
-
+import sys
 class ODLFlowService:
 
+    #change to something meaningful
     DEFAULT_FLOW_NAME = 'Foo'
     ODL_USERNAME = 'admin'
     ODL_PASSWORD = 'admin'
@@ -12,14 +13,22 @@ class ODLFlowService:
 
     @classmethod
     def create_block_flow(cls, odl_ip, flow_id, ip_to_block):
-        url = 'http://' + odl_ip + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + str(flow_id)
-
-        put( 
+        url = 'http://' + odl_ip + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0' + 'flow/' + flow_id
+        print(url)
+        print(cls.create_xml_payload(flow_id = flow_id, ip_to_block = ip_to_block))
+        print("-------------------------------")
+        r = put( 
             url, 
             headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'},
-            auth = (ODL_USERNAME, ODL_PASSWORD),
+            auth = (cls.ODL_USERNAME, cls.ODL_PASSWORD),
             data = cls.create_xml_payload(flow_id = flow_id, ip_to_block = ip_to_block)
         )
+
+        if r.status_code == 400:
+            print(r.text)
+            sys.exit()
+        else:
+            print("Successfully created block flow! Yay!")
 
     @classmethod
     def create_xml_payload(cls, flow_id, ip_to_block):
@@ -38,7 +47,7 @@ class ODLFlowService:
                             'type': '2048'
                         }
                     },
-                    'ipv4-source': ip_to_block,
+                    'ipv6-source': ip_to_block,
                     'tcp-flags-match': {
                         'tcp-flags': cls.TCP_FLAGS
                     }
@@ -53,9 +62,9 @@ class ODLFlowService:
                             }
                         }
                     }
-                }
+                },
                 'priority': '2',
-                'hard-timeout': cls.FLOW_TIMEOUT,
+                'hard-timeout': str(cls.FLOW_TIMEOUT),
             }
         }
 
