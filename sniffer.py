@@ -27,6 +27,12 @@ def check_packet(packet):
     ip = packet.src
     current_time = datetime.now()
 
+    if not ip in packets.keys():
+        packets[ip] = {
+            'syn_packet_count': 0,
+            'packet_arrival_times' = []
+        }
+
     remove_old_packets(now = current_time, ip_address = ip)
 
     #increment syn packet count and set last packet at
