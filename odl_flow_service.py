@@ -1,10 +1,9 @@
 from requests import put
 from xmler import dict2xml
-import sys
-class ODLFlowService:
+from sys import exit
 
-    #change to something meaningful
-    DEFAULT_FLOW_NAME = 'Foo'
+class ODLFlowService:
+    DEFAULT_FLOW_NAME = 'SYN-FLOOD PROTECTION FLOW'
     ODL_USERNAME = 'admin'
     ODL_PASSWORD = 'admin'
 
@@ -13,20 +12,17 @@ class ODLFlowService:
 
     @classmethod
     def create_block_flow(cls, odl_ip, flow_id, ip_to_block):
-        url = 'http://' + odl_ip + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0' + 'flow/' + flow_id
-        print(url)
-        print(cls.create_xml_payload(flow_id = flow_id, ip_to_block = ip_to_block))
-        print("-------------------------------")
-        r = put( 
+        url = 'http://' + odl_ip + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + flow_id
+        request = put(
             url, 
             headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'},
             auth = (cls.ODL_USERNAME, cls.ODL_PASSWORD),
             data = cls.create_xml_payload(flow_id = flow_id, ip_to_block = ip_to_block)
         )
 
-        if r.status_code == 400:
-            print(r.text)
-            sys.exit()
+        if request.status_code == 400:
+            print(request.text)
+            exit()
         else:
             print("Successfully created block flow! Yay!")
 
@@ -47,7 +43,7 @@ class ODLFlowService:
                             'type': '2048'
                         }
                     },
-                    'ipv6-source': ip_to_block,
+                    'ipv4-source': ip_to_block,
                     'tcp-flags-match': {
                         'tcp-flags': cls.TCP_FLAGS
                     }
