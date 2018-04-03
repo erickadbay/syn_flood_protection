@@ -9,7 +9,8 @@ class ODLFlowService:
 
     DEFAULT_FLOW_NAME = 'SYN-FLOOD PROTECTION FLOW'
     TCP_FLAGS = '0x02'
-    FLOW_TIMEOUT = 12
+    # Drop packets for 5 minutes
+    FLOW_TIMEOUT = 300
 
     @classmethod
     def create_block_flow(cls, flow_id, ip_to_block):
