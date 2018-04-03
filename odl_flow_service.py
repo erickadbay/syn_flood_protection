@@ -14,7 +14,6 @@ class ODLFlowService:
 
     @classmethod
     def create_block_flow(cls, flow_id, ip_to_block):
-        flow_id = str(flow_id)
         url = 'http://' + cls.ODL_CONTROLLER_IP + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + flow_id
         request = put(
             url, 

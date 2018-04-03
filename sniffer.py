@@ -35,7 +35,7 @@ def check_packet(packet):
     if packet_dict['syn_packet_count'] >= SYN_SEGMENT_THRESHOLD:
         print("Detected SYN-flood attack coming from " + ip)
         print("Starting attack mitigation process...\n")
-        ODLFlowService.create_block_flow(ip_to_block = ip, flow_id = randint(1,100))
+        ODLFlowService.create_block_flow(ip_to_block = ip, flow_id = str(randint(1,100)))
 
 def remove_old_packets(now, ip_address):
     time_diff = now - timedelta(seconds = DETECTION_WINDOW)
