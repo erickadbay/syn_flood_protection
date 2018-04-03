@@ -23,10 +23,13 @@ def check_packet(packet):
     packet_dict = packets[ip]
 
     remove_old_packets(now = current_time, ip_address = ip)
+
+    new_packets = packet_dict['packet_arrival_times'] + [current_time]
+
     set_count_and_packets(
         ip_address = ip,
         count = packet_dict['syn_packet_count'] + 1,
-        packets = packet_dict['packet_arrival_times'].append(current_time)
+        new_packets = new_packets
     )
 
     if packet_dict['syn_packet_count'] >= SYN_SEGMENT_THRESHOLD:
@@ -41,13 +44,13 @@ def remove_old_packets(now, ip_address):
     set_count_and_packets(
         ip_address = ip_address,
         count = len(valid_packets),
-        packets = valid_packets
+        new_packets = valid_packets
     )
 
-def set_count_and_packets(ip_address, count, packets):
+def set_count_and_packets(ip_address, count, new_packets):
     packets[ip_address]['syn_packet_count'] = count
-    packets[ip_address]['packet_arrival_times'] = packets
+    packets[ip_address]['packet_arrival_times'] = new_packets
 
 if __name__ == '__main__':
-    print("Sniffing for SYN packets...")
+    print("Sniffing for SYN packets...\n")
     sniff(iface = 'enp0s8', filter = 'tcp[tcpflags] & tcp-syn != 0', prn = check_packet)

@@ -14,7 +14,8 @@ class ODLFlowService:
 
     @classmethod
     def create_block_flow(cls, flow_id, ip_to_block):
-        url = 'http://' + ODL_CONTROLLER_IP + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + flow_id
+        flow_id = str(flow_id)
+        url = 'http://' + cls.ODL_CONTROLLER_IP + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + flow_id
         request = put(
             url, 
             headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'},
@@ -36,7 +37,7 @@ class ODLFlowService:
         body = {
             'flow': {
                 '@attrs': {'xmlns': 'urn:opendaylight:flow:inventory'},
-                'id': str(flow_id),
+                'id': flow_id,
                 'table_id': '0',
                 'flow-name': cls.DEFAULT_FLOW_NAME,
                 'match': {
