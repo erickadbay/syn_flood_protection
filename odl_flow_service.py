@@ -3,16 +3,17 @@ from xmler import dict2xml
 from sys import exit
 
 class ODLFlowService:
-    DEFAULT_FLOW_NAME = 'SYN-FLOOD PROTECTION FLOW'
+    ODL_CONTROLLER_IP = '192.168.56.10'
     ODL_USERNAME = 'admin'
     ODL_PASSWORD = 'admin'
 
+    DEFAULT_FLOW_NAME = 'SYN-FLOOD PROTECTION FLOW'
     TCP_FLAGS = '0x02'
     FLOW_TIMEOUT = 12
 
     @classmethod
-    def create_block_flow(cls, odl_ip, flow_id, ip_to_block):
-        url = 'http://' + odl_ip + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + flow_id
+    def create_block_flow(cls, flow_id, ip_to_block):
+        url = 'http://' + ODL_CONTROLLER_IP + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + flow_id
         request = put(
             url, 
             headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'},
@@ -24,7 +25,7 @@ class ODLFlowService:
             print(request.text)
             exit()
         else:
-            print("Successfully created block flow! Yay!")
+            print('Successfully created block flow! Yay!')
 
     @classmethod
     def create_xml_payload(cls, flow_id, ip_to_block):
