@@ -8,18 +8,15 @@ class ODLFlowService:
     ODL_PASSWORD = 'admin'
 
     DEFAULT_FLOW_NAME = 'SYN-FLOOD PROTECTION FLOW'
-    TCP_FLAGS = '0x02'
-    # Drop packets for 5 minutes
-    FLOW_TIMEOUT = 300
 
     @classmethod
-    def create_block_flow(cls, flow_id, ip_to_block):
+    def create_block_flow(cls, flow_id, ip_to_block, timeout):
         url = 'http://' + cls.ODL_CONTROLLER_IP + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + flow_id
         request = put(
             url, 
             headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'},
             auth = (cls.ODL_USERNAME, cls.ODL_PASSWORD),
-            data = cls.create_xml_payload(flow_id = flow_id, ip_to_block = ip_to_block)
+            data = cls.create_xml_payload(flow_id = flow_id, ip_to_block = ip_to_block, timeout = str(timeout))
         )
 
         if request.status_code == 400:
@@ -29,10 +26,9 @@ class ODLFlowService:
             print('Successfully created block flow! Yay!')
 
     @classmethod
-    def create_xml_payload(cls, flow_id, ip_to_block):
+    def create_xml_payload(cls, flow_id, ip_to_block, timeout):
         xml_prolog = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
 
-        # TWEAK FOR ACTUAL FLOW THAT BLOCKS PACKETS FROM ip_to_block
         body = {
             'flow': {
                 '@attrs': {'xmlns': 'urn:opendaylight:flow:inventory'},
@@ -45,10 +41,11 @@ class ODLFlowService:
                             'type': '2048'
                         }
                     },
-                    'ipv4-source': ip_to_block,
-                    'tcp-flags-match': {
-                        'tcp-flags': cls.TCP_FLAGS
-                    }
+                    'ip-match': {
+                        'ip-protocol': '6'
+                    },
+                    'ipv4-source': ip_to_block + '/32',
+                    'tcp-destination-port': '80'
                 },
                 'instructions': {
                     'instruction': {
@@ -62,7 +59,7 @@ class ODLFlowService:
                     }
                 },
                 'priority': '2',
-                'hard-timeout': str(cls.FLOW_TIMEOUT),
+                'hard-timeout': timeout,
             }
         }
 

@@ -1,12 +1,13 @@
 from scapy.all import *
 from odl_flow_service import ODLFlowService
 from random import randint
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, MINYEAR
 
 #Attack sends 10 SYN/second
 SYN_SEGMENT_THRESHOLD = 6
 # Only care about the packets that arrived over this detection window
 DETECTION_WINDOW = 1
+FLOW_TIMEOUT = 300
 
 packets = {}
 
@@ -17,7 +18,8 @@ def check_packet(packet):
     if not ip in packets.keys():
         packets[ip] = {
             'syn_packet_count': 0,
-            'packet_arrival_times': []
+            'packet_arrival_times': [],
+            'flow_expiry_time': datetime(MINYEAR, 1, 1, 0, 0, 0, 0)
         }
 
     packet_dict = packets[ip]
@@ -32,10 +34,12 @@ def check_packet(packet):
         new_packets = new_packets
     )
 
-    if packet_dict['syn_packet_count'] >= SYN_SEGMENT_THRESHOLD:
+    if packet_dict['syn_packet_count'] > SYN_SEGMENT_THRESHOLD and packet_dict['flow_expiry_time'] <= current_time:
         print("Detected SYN-flood attack coming from " + ip)
         print("Starting attack mitigation process...\n")
-        ODLFlowService.create_block_flow(ip_to_block = ip, flow_id = str(randint(1,100)))
+        ODLFlowService.create_block_flow(ip_to_block = ip, flow_id = str(randint(1,100)), timeout = FLOW_TIMEOUT)
+
+        packets[ip]['flow_expiry_time'] = current_time + timedelta(seconds = FLOW_TIMEOUT)
 
 def remove_old_packets(now, ip_address):
     time_diff = now - timedelta(seconds = DETECTION_WINDOW)
