@@ -2,6 +2,7 @@ from scapy.all import *
 from odl_flow_service import ODLFlowService
 from random import randint
 from datetime import datetime, timedelta, MINYEAR
+import sys
 
 #Attack sends 10 SYN/second
 SYN_SEGMENT_THRESHOLD = 6
@@ -56,5 +57,9 @@ def set_count_and_packets(ip_address, count, new_packets):
     packets[ip_address]['packet_arrival_times'] = new_packets
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Please provide an interface to sniff packets on")
+        sys.exit()
+    interface = sys.argv[1]
     print("Sniffing for SYN packets...\n")
-    sniff(iface = 'enp0s8', filter = 'tcp[tcpflags] & tcp-syn != 0', prn = check_packet)
+    sniff(iface = interface, filter = 'tcp[tcpflags] & tcp-syn != 0', prn = check_packet)
