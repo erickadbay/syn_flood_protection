@@ -2,6 +2,7 @@ from scapy.all import *
 from odl_flow_service import ODLFlowService
 from random import randint
 from datetime import datetime, timedelta, MINYEAR
+from netifaces import ifaddresses, AF_INET
 import sys
 
 #Attack sends 10 SYN/second
@@ -11,10 +12,14 @@ DETECTION_WINDOW = 1
 FLOW_TIMEOUT = 300
 
 packets = {}
+ip_to_protect = 0
 
 def check_packet(packet):
     ip = packet.getlayer(IP).src
     current_time = datetime.now()
+
+    if not packet.getlayer(IP).dst == ip_to_protect:
+        return
 
     if not ip in packets.keys():
         packets[ip] = {
@@ -38,7 +43,7 @@ def check_packet(packet):
     if packet_dict['syn_packet_count'] > SYN_SEGMENT_THRESHOLD and packet_dict['flow_expiry_time'] <= current_time:
         print("Detected SYN-flood attack coming from " + ip)
         print("Starting attack mitigation process...\n")
-        ODLFlowService.create_block_flow(ip_to_block = ip, flow_id = str(randint(1,100)), timeout = FLOW_TIMEOUT)
+        ODLFlowService.create_block_flow(ip_to_protect = ip_to_protect, ip_to_block = ip, flow_id = str(randint(1,100)), timeout = FLOW_TIMEOUT)
 
         packets[ip]['flow_expiry_time'] = current_time + timedelta(seconds = FLOW_TIMEOUT)
 
@@ -61,5 +66,6 @@ if __name__ == '__main__':
         print("Please provide an interface to sniff packets on")
         sys.exit()
     interface = sys.argv[1]
+    ip_to_protect = ifaddresses(interface)[AF_INET][0]['addr']
     print("Sniffing for SYN packets...\n")
     sniff(iface = interface, filter = 'tcp[tcpflags] & tcp-syn != 0', prn = check_packet)

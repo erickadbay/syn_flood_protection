@@ -10,13 +10,13 @@ class ODLFlowService:
     DEFAULT_FLOW_NAME = 'SYN-FLOOD PROTECTION FLOW'
 
     @classmethod
-    def create_block_flow(cls, flow_id, ip_to_block, timeout):
+    def create_block_flow(cls, flow_id, ip_to_block, ip_to_protect, timeout):
         url = 'http://' + cls.ODL_CONTROLLER_IP + ':8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/' + flow_id
         request = put(
             url, 
             headers = {'Content-Type': 'application/xml', 'Accept': 'application/xml'},
             auth = (cls.ODL_USERNAME, cls.ODL_PASSWORD),
-            data = cls.create_xml_payload(flow_id = flow_id, ip_to_block = ip_to_block, timeout = str(timeout))
+            data = cls.create_xml_payload(flow_id = flow_id, ip_to_block = ip_to_block, ip_to_protect = ip_to_protect, timeout = str(timeout))
         )
 
         if request.status_code == 400:
@@ -26,7 +26,7 @@ class ODLFlowService:
             print('Successfully created block flow! Yay!')
 
     @classmethod
-    def create_xml_payload(cls, flow_id, ip_to_block, timeout):
+    def create_xml_payload(cls, flow_id, ip_to_block, ip_to_protect, timeout):
         xml_prolog = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
 
         body = {
@@ -45,6 +45,7 @@ class ODLFlowService:
                         'ip-protocol': '6'
                     },
                     'ipv4-source': ip_to_block + '/32',
+                    'ipv4-destination': ip_to_protect + '/32',
                     'tcp-destination-port': '80'
                 },
                 'instructions': {
