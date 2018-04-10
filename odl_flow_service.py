@@ -59,7 +59,7 @@ class ODLFlowService:
                         }
                     }
                 },
-                'priority': '2',
+                'priority': '12',
                 'hard-timeout': timeout,
             }
         }
